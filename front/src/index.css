@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-main: #F5F7FB;
+  --bg-surface: #FFFFFF;
+  --text-primary: #212529;
+  --text-secondary: #6C757D;
+  --text-placeholder: #ADB5BD;
+  --color-primary: #4F3BFF;
+  --color-on-primary: #FFFFFF;
+  --color-container-sec: #EDF2F7;
+  --color-text-sec: #4F3BFF;
+  --border-outline: #E0E0E0;
+  --border-active: #4F3BFF;
+  --badge-pos-bg: #E6FFFA;
+  --badge-pos-text: #12B886;
+  --badge-neg-bg: #FFF9E6;
+  --badge-neg-text: #FAB005;
+}
+
+html.dark, .dark {
+  color-scheme: dark;
+  --bg-main: #121212;
+  --bg-surface: #1E1E1E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0BEC5;
+  --text-placeholder: #757575;
+  --color-primary: #7C4DFF;
+  --color-on-primary: #FFFFFF;
+  --color-container-sec: #2C2C2C;
+  --color-text-sec: #A58BFF;
+  --border-outline: #333333;
+  --border-active: #895FFF;
+  --badge-pos-bg: #004D40;
+  --badge-pos-text: #69F0AE;
+  --badge-neg-bg: #424200;
+  --badge-neg-text: #FFFF00;
+}
+
+/* Transição suave e temas globais */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+}
+
+/* Regras globais automáticas quando dark estiver ativo */
+html.dark .bg-white {
+  background-color: #1E1E1E !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #2C2C2C !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: #333333 !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: #FFFFFF !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-gray-500 {
+  color: #B0BEC5 !important;
+}
+
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #757575 !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+html.dark textarea,
+html.dark select {
+  background-color: #1E1E1E !important;
+  color: #FFFFFF !important;
+  border-color: #333333 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #757575 !important;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #895FFF !important;
+  outline: none !important;
+}
+
+@layer utilities {
+  /* Remove as barras de rolagem mantendo a funcionalidade de scroll */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo Express - Vitrine Digital & Pedidos WhatsApp</title>
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="Crie seu catálogo digital interativo e receba pedidos no WhatsApp" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('Service Worker registrado:', reg.scope);
+          }).catch((err) => {
+            console.log('Falha ao registrar Service Worker:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
+

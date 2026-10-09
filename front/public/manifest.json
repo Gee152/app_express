@@ -1,0 +1,19 @@
+{
+  "short_name": "Catálogo Express",
+  "name": "Catálogo Express - Vitrine Digital",
+  "description": "Crie e gerencie seu catálogo digital e receba pedidos no WhatsApp",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}

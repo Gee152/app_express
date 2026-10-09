@@ -1,0 +1,6 @@
+{
+  "name": "Catálogo Express",
+  "description": "Plataforma 100% front-end para criação de catálogos digitais, cardápios e vitrines de produtos com direcionamento para WhatsApp, onboarding guiado por nicho, personalização de temas, pipeline de otimização de imagens e exportação em ZIP estático.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

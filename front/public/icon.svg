@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#grad)" />
+  <!-- Shopping Bag / Lightning Icon -->
+  <path d="M160 176V144C160 90.98 202.98 48 256 48C309.02 48 352 90.98 352 144V176M112 176H400L432 448H80L112 176Z" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M260 250L210 330H270L250 400L310 320H250L260 250Z" fill="#fbbf24" stroke="#fbbf24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
