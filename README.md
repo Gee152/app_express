@@ -45,7 +45,6 @@ O **Catálogo Express** foi desenvolvido para libertar estabelecimentos comercia
 - 🎨 **Multi-Nicho Instantâneo:** Adaptação inteligente de termos, paletas de cores harmônicas e campos específicos (Restaurantes, Hamburguerias, Pizzarias, Moda, Cosméticos, Pet Shops, Clínicas, Salões de Beleza e Serviços).
 - 🏢 **Multi-Tenant Seguro (RBAC):** Suporte nativo a dezenas de lojas isoladas, cada uma com seus próprios produtos, clientes, configurações e esteira de atendimento.
 - 📱 **Progressive Web App (PWA):** Instalação com 1 clique na tela inicial de clientes e atendentes, operando com cache local e alta velocidade.
-- 📅 **Agendamento Inteligente & Google Calendar:** Sincronização via OAuth 2.0 direta na Google Agenda do lojista e lembretes automáticos via Evolution API.
 
 ---
 
@@ -56,8 +55,6 @@ O **Catálogo Express** foi desenvolvido para libertar estabelecimentos comercia
 | **Vitrine Pública do Cliente** | Catálogo responsivo com filtros por categoria, busca textual, fotos de alta qualidade, adicionais/opcionais, carrinho interativo e checkout com envio ao WhatsApp. |
 | **Onboarding Wizard** | Assistente de configuração que coloca uma loja no ar em menos de 3 minutos (seleção de nicho, cores com verificação de contraste e inserção de produtos). |
 | **Esteira Kanban de Pedidos** | Gestão visual de pedidos em tempo real por colunas (*Recebidos*, *Em Preparo*, *Prontos*, *Entregues*) com temporizador de permanência por status. |
-| **Módulo de Agendamentos** | Grade de horários públicos, regras de intervalo/duração, sincronização OAuth 2.0 com Google Agenda e disparos automáticos de lembretes aos clientes. |
-| **Gatekeeper de Clientes & Pets** | Cadastro e autenticação de tutores/clientes com ficha técnica para múltiplos animais (espécie, raça, porte, cuidados especiais e transporte). |
 | **Painel Superadmin** | Gestão global de lojas, duplicação rápida, controle de planos (Mensal, Trimestral, Semestral, Anual) e ativação/suspensão de assinaturas. |
 | **Editor com Rich Text (Lexical)** | Descrições ricas com formatação avançada (negrito, itálico, listas, links) utilizando a engine Lexical do Facebook. |
 | **Multicanal Híbrido** | Opção para direcionar o cliente a canais externos (Mercado Livre, Shopee, Amazon) com rastreamento analítico de cliques. |
@@ -80,7 +77,7 @@ graph TD
 
     subgraph 2_Domain [2. Domain & Business Rules]
         Controllers --> UseCases[Use Cases - Regras de Negócio]
-        UseCases --> Entities[Entities - User, Store, Appointment, Customer]
+        UseCases --> Entities[Entities - User, Store, Product, Category]
         UseCases --> VOs[Value Objects - StoreSubscription]
         UseCases --> ReposContracts[Interfaces de Repositório - DIP]
         UseCases --> ProvidersContracts[Interfaces de Provedores - DIP]
@@ -186,9 +183,6 @@ npm run dev
 
 - **API Base:** `http://localhost:3333`
 - **Healthcheck:** `http://localhost:3333/api/health`
-- **Credenciais padrão do Superadmin:**
-  - **E-mail:** `gabrielvictos152@gmail.com`
-  - **Senha:** `123456789`
 
 ---
 
@@ -384,9 +378,6 @@ Para se aprofundar nas regras de negócio e procedimentos operacionais, consulte
 
 - 📖 **[Documentação Funcional Completa](docs/DOCUMENTACAO_FUNCIONAL.md):** Manual completo de perfis de acesso, regras de onboarding, vitrine pública, esteira Kanban, multi-tenant e especificidades por nicho.
 - 🚀 **[Guia e Checklist Pré-Deploy](docs/GUIA_PRE_DEPLOY.md):** Procedimento Operacional Padrão (POP) em 5 fases (*Prepare*, *Backup*, *Deploy*, *Verify*, *Rollback*), variáveis de ambiente de produção, migrações TypeORM, Nginx e PM2.
-- 📅 **[Sincronização Google Agenda via OAuth2](google-agenda-oauth-sync.md):** Especificação da integração com a Google Calendar API para agendamento direto e sem etapas manuais.
-- 🐾 **[Cadastro de Clientes & Múltiplos Pets](customer-auth-pets.md):** Arquitetura do módulo de tutores e fichas cadastrais de animais.
-- ⏰ **[Cronjob de Lembretes via WhatsApp](appointment-cron-reminder.md):** Lógica de background jobs com `node-cron` e Evolution API para envio autônomo de lembretes.
 
 ---
 
@@ -406,7 +397,6 @@ Para se aprofundar nas regras de negócio e procedimentos operacionais, consulte
 - **Banco de Dados & ORM:** [PostgreSQL 16](https://www.postgresql.org/), [TypeORM](https://typeorm.io/)
 - **Segurança & Criptografia:** [Bcrypt](https://github.com/kelektiv/node.bcrypt.js), [jsonwebtoken (JWT)](https://github.com/auth0/node-jsonwebtoken), [Helmet](https://helmetjs.github.io/), [CORS](https://github.com/expressjs/cors)
 - **Validação de Dados:** [class-validator](https://github.com/typestack/class-validator), [class-transformer](https://github.com/typestack/class-transformer)
-- **Tarefas Agendadas:** [node-cron](https://github.com/node-cron/node-cron)
 
 ### Testes & Qualidade
 - **Testes Unitários e Integração:** [Jest](https://jestjs.io/), [ts-jest](https://kulshekhar.github.io/ts-jest/)
