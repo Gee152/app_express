@@ -16,6 +16,9 @@ module.exports = {
           moduleResolution: 'NodeNext',
           target: 'ES2022',
         },
+        diagnostics: {
+          ignoreCodes: [151002, 'TS151002'],
+        },
       },
     ],
   },
