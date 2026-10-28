@@ -221,27 +221,82 @@ class ApiService {
     },
   };
 
-  // --- Users API (Superroot) ---
-  public users = {
-    list: async () => {
-      return this.request<Array<{
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-        storeId: string | null;
-        createdAt: string;
-        store?: {
+    // --- Users API (Superroot) ---
+    public users = {
+      list: async () => {
+        return this.request<Array<{
           id: string;
           name: string;
-          slug: string;
-          status: string;
-          whatsapp?: string;
-        } | null;
-      }>>('/users');
-    },
-  };
-}
+          email: string;
+          role: string;
+          storeId: string | null;
+          createdAt: string;
+          store?: {
+            id: string;
+            name: string;
+            slug: string;
+            status: string;
+            whatsapp?: string;
+          } | null;
+        }>>('/users');
+      },
+    };
 
+    // --- Customer Authentication & Pets API (Public Shop) ---
+    public customerAuth = {
+      register: async (slug: string, payload: any) => {
+        return this.request<{
+          token: string;
+          customer: import('../types').Customer;
+        }>(`/stores/${slug}/customers/register`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      },
 
-export const api = new ApiService();
+      login: async (slug: string, payload: { email: string; password: string }) => {
+        return this.request<{
+          token: string;
+          customer: import('../types').Customer;
+        }>(`/stores/${slug}/customers/login`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      },
+
+      me: async (slug: string, customerToken?: string) => {
+        const headers: Record<string, string> = {};
+        if (customerToken) {
+          headers['Authorization'] = `Bearer ${customerToken}`;
+        }
+        return this.request<{
+          customer: import('../types').Customer;
+        }>(`/stores/${slug}/customers/me`, {
+          headers,
+        });
+      },
+    };
+
+    // --- Appointments API (Persistência & Cronjob) ---
+    public appointments = {
+      create: async (slug: string, payload: any) => {
+        return this.request<any>(`/stores/${slug}/appointments`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      },
+      list: async (slug: string, status?: string) => {
+        const query = status ? `?status=${encodeURIComponent(status)}` : '';
+        return this.request<any[]>(`/stores/${slug}/appointments${query}`);
+      },
+      updateStatus: async (slug: string, id: string, status: string) => {
+        return this.request<{ message: string; status: string }>(`/stores/${slug}/appointments/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status }),
+        });
+      },
+    };
+  }
+
+  export const api = new ApiService();
+

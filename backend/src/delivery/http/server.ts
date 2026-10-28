@@ -3,6 +3,7 @@ import { createApp } from '../../app.js';
 import { AppDataSource } from '../../infrastructure/database/typeorm/data-source.js';
 import { envConfig } from '../../config/env.config.js';
 import { seedSuperAdmin } from '../../infrastructure/database/typeorm/seeds/seedSuperAdmin.js';
+import { startAppointmentReminderCron } from '../../infrastructure/cron/AppointmentReminderCron.js';
 
 async function bootstrap() {
   try {
@@ -11,6 +12,9 @@ async function bootstrap() {
     console.log('✅ Conexão com o banco de dados estabelecida com sucesso!');
 
     await seedSuperAdmin();
+
+    // Inicializa o cronjob de lembretes automáticos de agendamento (1h antes via WhatsApp)
+    startAppointmentReminderCron();
 
     const app = createApp();
 

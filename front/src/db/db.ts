@@ -1,4 +1,4 @@
-import { Empresa, Categoria, Produto, Config, Pedido, LojaStatusEnum } from '../types';
+import { Empresa, Categoria, Produto, Config, Pedido, LojaStatusEnum, Agendamento } from '../types';
 import { calcularStatusLoja } from '../utils/lojaStatus';
 import { api } from '../services/api';
 
@@ -13,6 +13,7 @@ export interface LojaSnapshot {
   nichoId: string;
   isOnboarded: boolean;
   pedidos?: Pedido[];
+  agendamentos?: Agendamento[];
 }
 
 export interface LojaDono {

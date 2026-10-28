@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { Pedido, PedidoStatus } from '../../types';
 import { ArrowLeft,Check, RefreshCw, Send, Clock, Download, Share2, X, Phone, Moon, Sun, ChefHat, Truck, CheckCircle2,Inbox, Flame, Search } from 'lucide-react';
+import { toast } from '../ui/Toast';
 
 type Filtro = 'esteira' | 'todos' | 'novo' | 'preparando' | 'pronto' | 'concluido' | 'hoje' | 'mes';
 type PeriodoExp = 'hoje' | 'mes' | 'todos' | 'custom';
@@ -231,7 +232,7 @@ export const PedidosView: React.FC = () => {
     const rawPhone = empresa.whatsapp || '';
     const phone = rawPhone.replace(/[^0-9]/g, '');
     if (!phone) {
-      alert('WhatsApp da empresa não configurado.');
+      toast.error('WhatsApp da empresa não configurado.');
       return;
     }
     const statusLabel =

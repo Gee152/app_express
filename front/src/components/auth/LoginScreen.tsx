@@ -58,8 +58,8 @@ export const LoginScreen: React.FC = () => {
         </div>
 
         {/* Info da Loja caso venha pelo link de acesso */}
-        {typeof window !== 'undefined' && window.location.search.includes('loja=') && activeSlug && empresa?.nome && (
-          <div className="p-3 bg-indigo-950/60 border border-indigo-500/30 rounded-2xl flex items-center gap-3">
+        {typeof window !== 'undefined' && (window.location.search.includes('loja=') || window.location.search.includes('acesso=')) && activeSlug && empresa?.nome && (
+          <div className="p-3.5 bg-indigo-950/60 border border-indigo-500/30 rounded-2xl flex items-center gap-3 text-left">
             {empresa.logo ? (
               <img src={empresa.logo} alt={empresa.nome} className="w-10 h-10 rounded-xl object-cover border border-indigo-400/30 flex-shrink-0" />
             ) : (
@@ -67,9 +67,14 @@ export const LoginScreen: React.FC = () => {
                 <Store className="w-5 h-5" />
               </div>
             )}
-            <div className="min-w-0 flex-1 text-left">
+            <div className="min-w-0 flex-1">
               <span className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold block">Acessando Loja</span>
               <p className="text-sm font-extrabold text-white truncate">{empresa.nome}</p>
+              {dono?.email && (
+                <span className="text-[11px] text-emerald-400 font-medium block truncate mt-0.5">
+                  ✓ Credenciais ativas para {dono.email}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -152,11 +157,17 @@ export const LoginScreen: React.FC = () => {
           <div>
             <button
               type="button"
-              onClick={() => setActiveView('cadastro')}
+              onClick={() => {
+                if (activeSlug && dono?.email) {
+                  window.location.href = window.location.origin + '/?criar=loja';
+                } else {
+                  setActiveView('cadastro');
+                }
+              }}
               className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer inline-flex items-center gap-1.5 transition-colors"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Novo na plataforma? Criar uma conta para sua loja</span>
+              <span>{activeSlug && dono?.email ? 'Deseja cadastrar uma nova loja? Criar outra loja' : 'Novo na plataforma? Criar uma conta para sua loja'}</span>
             </button>
           </div>
           <p className="text-[11px] text-slate-500 leading-relaxed">

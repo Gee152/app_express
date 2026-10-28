@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { processImageFile, formatBytes } from '../../utils/imagePipeline';
-import { Plus, Trash2, Edit2, Package, FolderPlus, Star, Check, Loader2, Eye, EyeOff, Wand2, Sparkles, ExternalLink, MousePointerClick, ShoppingBag } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, FolderPlus, Star, Check, Loader2, Eye, EyeOff, Wand2, Sparkles, ExternalLink, MousePointerClick, ShoppingBag, AlertCircle } from 'lucide-react';
+import { toast } from '../ui/Toast';
 import { Produto, ProdutoOpcao, ProdutoOpcionalItem } from '../../types';
 import { getTemplateAdicionais, normalizarOpcoes, TIPOS_COMIDA } from '../../data/adicionaisData';
 import { Select } from '../ui/Select';
@@ -43,6 +44,8 @@ export const ProductManager: React.FC = () => {
   const [editingProd, setEditingProd] = useState<Produto | null>(null);
 
   const [pName, setPName] = useState('');
+  const [pNameError, setPNameError] = useState('');
+  const pNameRef = useRef<HTMLInputElement>(null);
   const [pDesc, setPDesc] = useState('');
   const [pCategory, setPCategory] = useState<number | string>(categorias[0]?.id || 1);
   const [pPrice, setPPrice] = useState('');
@@ -85,6 +88,7 @@ export const ProductManager: React.FC = () => {
   const handleOpenNew = () => {
     setEditingProd(null);
     setPName('');
+    setPNameError('');
     setPDesc('');
     setPCategory(categorias[0]?.id || 1);
     setPPrice('');
@@ -103,6 +107,7 @@ export const ProductManager: React.FC = () => {
   const handleOpenEdit = (p: Produto) => {
     setEditingProd(p);
     setPName(p.nome);
+    setPNameError('');
     setPDesc(p.descricao || '');
     setPCategory(p.categoria);
     setPPrice(p.preco.toString());
@@ -129,7 +134,7 @@ export const ProductManager: React.FC = () => {
       setPThumb(res.thumb);
       setImgStats(`${formatBytes(res.originalSize)} → ${formatBytes(res.mainSize)} (WebP 75%)`);
     } catch (err) {
-      alert('Erro ao carregar imagem: ' + err);
+      toast.error('Erro ao carregar imagem: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setImgUploading(false);
     }
@@ -137,7 +142,11 @@ export const ProductManager: React.FC = () => {
 
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pName.trim()) return;
+    if (!pName.trim()) {
+      setPNameError('Por favor, informe o nome do produto.');
+      pNameRef.current?.focus();
+      return;
+    }
 
     const numPrice = parseFloat(pPrice.replace(',', '.')) || 0;
 
@@ -291,7 +300,7 @@ export const ProductManager: React.FC = () => {
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Novo Produto</span>
+              <span>Novo Produto</span>
             </button>
           </div>
         </div>
@@ -472,20 +481,51 @@ export const ProductManager: React.FC = () => {
             {/* Scrollable Body Form */}
             <form id="product-form" onSubmit={handleSaveProduct} className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[#6C757D] dark:text-[#B0BEC5]">Nome do Produto *</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#6C757D] dark:text-[#B0BEC5]">Nome do Produto *</label>
+                  {pNameError && (
+                    <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 animate-pulse">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      {pNameError}
+                    </span>
+                  )}
+                </div>
                 <input
+                  ref={pNameRef}
                   type="text"
-                  required
                   value={pName}
-                  onChange={(e) => setPName(e.target.value)}
-                  placeholder="Ex: Camiseta Oversized Streetwear"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E0E0E0] dark:border-[#333333] text-xs sm:text-sm outline-none focus:border-[#4F3BFF] dark:focus:border-[#895FFF] bg-white dark:bg-[#1E1E1E] text-[#212529] dark:text-[#FFFFFF]"
+                  onChange={(e) => {
+                    setPName(e.target.value);
+                    if (pNameError) setPNameError('');
+                  }}
+                  placeholder="Ex: Ração Super Premium"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm outline-none transition-all ${
+                    pNameError
+                      ? 'border-2 border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20 text-[#212529] dark:text-[#FFFFFF]'
+                      : 'border-[#E0E0E0] dark:border-[#333333] focus:border-teal-600 dark:focus:border-teal-400 bg-white dark:bg-[#1E1E1E] text-[#212529] dark:text-[#FFFFFF]'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#6C757D] dark:text-[#B0BEC5]">Categoria *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#6C757D] dark:text-[#B0BEC5]">Categoria *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nome = prompt('Nome da nova categoria:');
+                        if (nome && nome.trim()) {
+                          const nova = addCategoria(nome.trim(), '📦');
+                          setPCategory(nova.id);
+                        }
+                      }}
+                      className="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline cursor-pointer flex items-center gap-0.5"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Nova Categoria
+                    </button>
+                  </div>
                   <Select
                     value={pCategory}
                     onChange={(v) => setPCategory(v)}

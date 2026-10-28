@@ -1,0 +1,111 @@
+# ==============================================================================
+# Catálogo Express - Root .gitignore
+# Cobre todo o ecossistema Monorepo (Root, Backend Node.js/TypeORM e Frontend React/Vite)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 📦 Dependências (Dependencies)
+# ------------------------------------------------------------------------------
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ------------------------------------------------------------------------------
+# 🏗️ Compilação e Artefatos de Build (Build Outputs)
+# ------------------------------------------------------------------------------
+dist/
+*/dist/
+build/
+*/build/
+out/
+*/out/
+front/server.js
+server.js
+*.tsbuildinfo
+
+# ------------------------------------------------------------------------------
+# 🔐 Variáveis de Ambiente e Segredos (Environment & Secrets)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+*.env
+!.env.example
+!*.env.example
+!.env.test
+!*.env.test
+
+# ------------------------------------------------------------------------------
+# 🧪 Testes, Relatórios e Cobertura (Testing & Quality)
+# ------------------------------------------------------------------------------
+coverage/
+*/coverage/
+test-results/
+*/test-results/
+playwright-report/
+*/playwright-report/
+blob-report/
+playwright/.cache/
+.nyc_output/
+
+# ------------------------------------------------------------------------------
+# 📋 Logs e Diagnósticos (Logs)
+# ------------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------------------------------------
+# 🗄️ Bancos de Dados Locais e Volumes Docker (Databases & Storage)
+# ------------------------------------------------------------------------------
+pgdata/
+postgres-data/
+docker-data/
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+*.db-journal
+
+# ------------------------------------------------------------------------------
+# ⚡ Caches de Bundlers e Ferramentas (Tool Caches)
+# ------------------------------------------------------------------------------
+.vite/
+*/.vite/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.timestamp-*
+
+# ------------------------------------------------------------------------------
+# 💻 Editores e IDEs (Editor Configs)
+# ------------------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.iml
+
+# ------------------------------------------------------------------------------
+# 🍎 🐧 🪟 Sistema Operacional (OS Generated Files)
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

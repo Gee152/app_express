@@ -9,6 +9,7 @@ import { JwtTokenProvider } from './infrastructure/providers/token/JwtTokenProvi
 // Infrastructure Repositories (TypeORM)
 import { TypeOrmUserRepository } from './infrastructure/database/typeorm/repositories/TypeOrmUserRepository.js';
 import { TypeOrmStoreRepository } from './infrastructure/database/typeorm/repositories/TypeOrmStoreRepository.js';
+import { TypeOrmCustomerRepository } from './infrastructure/database/typeorm/repositories/TypeOrmCustomerRepository.js';
 
 // Domain Use Cases
 import { AuthenticateUserUseCase } from './domain/use-cases/auth/AuthenticateUserUseCase.js';
@@ -27,6 +28,7 @@ import { GetStoreSubscriptionUseCase } from './domain/use-cases/store/GetStoreSu
 import { AuthController } from './delivery/http/controllers/AuthController.js';
 import { StoreController } from './delivery/http/controllers/StoreController.js';
 import { StoreSubscriptionController } from './delivery/http/controllers/StoreSubscriptionController.js';
+import { CustomerAuthController } from './delivery/http/controllers/CustomerAuthController.js';
 import { createApiRouter } from './delivery/http/routes/index.js';
 import { errorHandler } from './delivery/http/middlewares/ErrorHandlerMiddleware.js';
 
@@ -45,15 +47,16 @@ export function createApp(): Express {
 
   const userRepository = new TypeOrmUserRepository();
   const storeRepository = new TypeOrmStoreRepository();
+  const customerRepository = new TypeOrmCustomerRepository();
 
   const authenticateUserUseCase = new AuthenticateUserUseCase(userRepository, hashProvider, tokenProvider);
   const registerUserUseCase = new RegisterUserUseCase(userRepository, hashProvider);
   const listUsersUseCase = new ListUsersUseCase(userRepository);
 
-  const createStoreUseCase = new CreateStoreUseCase(storeRepository);
+  const createStoreUseCase = new CreateStoreUseCase(storeRepository, userRepository, hashProvider);
   const getStoreBySlugUseCase = new GetStoreBySlugUseCase(storeRepository);
   const listStoresUseCase = new ListStoresUseCase(storeRepository);
-  const updateStoreUseCase = new UpdateStoreUseCase(storeRepository);
+  const updateStoreUseCase = new UpdateStoreUseCase(storeRepository, userRepository, hashProvider);
   const deleteStoreUseCase = new DeleteStoreUseCase(storeRepository);
 
   const toggleStorePaymentUseCase = new ToggleStorePaymentUseCase(storeRepository);
@@ -74,6 +77,13 @@ export function createApp(): Express {
     getStoreSubscriptionUseCase
   );
 
+  const customerAuthController = new CustomerAuthController(
+    customerRepository,
+    storeRepository,
+    hashProvider,
+    tokenProvider
+  );
+
   // Rotas da API
   app.use(
     '/api',
@@ -81,6 +91,7 @@ export function createApp(): Express {
       authController,
       storeController,
       storeSubscriptionController,
+      customerAuthController,
       tokenProvider,
       storeRepository,
     })

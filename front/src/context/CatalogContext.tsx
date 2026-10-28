@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Empresa, Categoria, Produto, Config, TemaConfig, CartItem, CartItemOpcao, TemaCores, Pedido, LojaStatusEnum } from '../types';
+import { Empresa, Categoria, Produto, Config, TemaConfig, CartItem, CartItemOpcao, TemaCores, Pedido, LojaStatusEnum, Agendamento, AgendamentoStatus } from '../types';
 import { NICHOS } from '../data/nichos';
 import { TEMAS } from '../data/temas';
 import { SAMPLE_DATA, getDefaultConfig } from '../data/sampleData';
@@ -12,7 +12,7 @@ import { api } from '../services/api';
 
 const LEGACY_LOCAL_STORAGE_KEY = 'catalogo_express_data_v2';
 
-export type ViewValue = 'onboarding' | 'admin' | 'public' | 'storemanager' | 'cadastro' | 'login' | 'pedidos' | 'superadmin-login';
+export type ViewValue = 'onboarding' | 'admin' | 'public' | 'storemanager' | 'cadastro' | 'login' | 'pedidos' | 'agendamentos' | 'superadmin-login';
 
 interface CatalogContextType {
   // Estado da loja/tenant ativa
@@ -115,6 +115,14 @@ interface CatalogContextType {
   registrarPedido: (slug: string, dados: Omit<Pedido, 'id' | 'data' | 'status'>) => void;
   atualizarStatusPedido: (slug: string, pedidoId: string, novoStatus: Pedido['status']) => void;
 
+  // Agendamentos (Pet Shop / Clínicas / Serviços)
+  agendamentos: Agendamento[];
+  adicionarAgendamento: (slug: string, dados: Omit<Agendamento, 'id' | 'dataCriacao' | 'status'> & { status?: AgendamentoStatus }) => Promise<Agendamento>;
+  atualizarStatusAgendamento: (slug: string, agendamentoId: string, novoStatus: AgendamentoStatus) => Promise<void>;
+  cancelarAgendamento: (slug: string, agendamentoId: string) => Promise<void>;
+  excluirAgendamento: (slug: string, agendamentoId: string) => Promise<void>;
+  limparTodosAgendamentos: (slug: string) => Promise<void>;
+
   // Backup & Reset (loja ativa)
   resetCatalog: () => void;
   importBackupJson: (jsonStr: string) => boolean;
@@ -169,6 +177,7 @@ function defaultRecordFor(nome: string, nichoId: string, slug: string): LojaReco
       config: getDefaultConfig(nichoId, themeId),
       nichoId,
       isOnboarded: false,
+      agendamentos: [],
     },
   };
 }
@@ -205,6 +214,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [produtos, setProdutos] = useState<Produto[]>(() => SAMPLE_DATA.restaurante.produtos);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [activeView, setActiveViewState] = useState<ViewValue>('login');
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
@@ -264,12 +274,70 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setNichoIdState(rec.nichoId);
     setConfig(rec.data.config);
     setEmpresa(rec.data.empresa);
-    setCategorias(rec.data.categorias);
+    let cats = rec.data.categorias || [];
+    // Regra: troca 'Banho & Tosa' por 'Serviços'
+    cats = cats.map((c) => {
+      const lower = c.nome.trim().toLowerCase();
+      if (lower.includes('banho') && lower.includes('tosa')) {
+        return { ...c, nome: 'Serviços', icone: '✂️' };
+      }
+      return c;
+    });
+    if (rec.nichoId === 'petshop' && !cats.some((c) => c.nome.trim().toLowerCase() === 'produtos' || c.nome.trim().toLowerCase() === 'produto')) {
+      const maxId = cats.reduce((max, c) => (typeof c.id === 'number' && c.id > max ? c.id : max), 0);
+      const nextId = Math.max(maxId + 1, 6);
+      cats = [...cats, { id: nextId, nome: 'Produtos', ordem: cats.length + 1, icone: '📦' }];
+    }
+    setCategorias(cats);
     setProdutos(rec.data.produtos);
     setIsOnboarded(rec.data.isOnboarded);
     setDono(rec.dono ?? null);
     setPlanoState(rec.plano ?? null);
     setPedidos(rec.data.pedidos ?? []);
+    // Remove dados mocados herdados de seeds de teste iniciais
+    const agsLimpos = (rec.data.agendamentos ?? []).filter(
+      (a) => !['ag-001', 'ag-002', 'ag-003', 'ag-004'].includes(a.id)
+    );
+    setAgendamentos(agsLimpos);
+    if ((rec.data.agendamentos ?? []).length !== agsLimpos.length) {
+      rec.data.agendamentos = agsLimpos;
+      saveLoja(rec).catch(() => {});
+    }
+
+    // Sincroniza agendamentos do backend (PostgreSQL) se disponível
+    if (rec.slug) {
+      api.appointments.list(rec.slug).then((backendAgs) => {
+        if (Array.isArray(backendAgs) && backendAgs.length > 0) {
+          setAgendamentos((currentAgs) => {
+            const currentIds = new Set(currentAgs.map((a) => a.id));
+            const novosDoBackend: Agendamento[] = backendAgs
+              .filter((b) => !currentIds.has(b.id))
+              .map((b) => ({
+                id: b.id,
+                servicoId: b.serviceId,
+                servicoNome: b.serviceName,
+                preco: Number(b.price) || 0,
+                pet: b.pet,
+                tutor: b.tutor,
+                dataAgendada: b.scheduledDate,
+                horario: b.scheduledTime,
+                status: b.status,
+                dataCriacao: b.createdAt ? new Date(b.createdAt).getTime() : Date.now(),
+                observacoes: b.notes,
+                googleCalendarUrl: b.googleCalendarUrl,
+              }));
+
+            if (novosDoBackend.length > 0) {
+              const merged = [...novosDoBackend, ...currentAgs];
+              rec.data.agendamentos = merged;
+              saveLoja(rec).catch(() => {});
+              return merged;
+            }
+            return currentAgs;
+          });
+        }
+      }).catch(() => {});
+    }
     setCart([]);
   }, []);
 
@@ -373,16 +441,21 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (mounted) {
           applyLoja(rec);
-          const hasCredentials = Boolean(rec.dono?.email && rec.dono?.senha);
+          const hasOwnerCredentials = Boolean(rec.dono?.email && rec.dono.email.trim() !== '');
 
           if (isPublicUrl && !acessoParam && (urlParams.get('view') === 'public' || urlParams.get('mode') === 'public')) {
             setIsCustomerView(true);
             setActiveViewState('public');
-          } else if (cadastroParam === 'true' || !hasCredentials) {
-            // Se cadastro=true ou loja não configurada: abre na tela de cadastro
+          } else if (hasOwnerCredentials) {
+            // SEGURANÇA: Se a loja já tiver login e senha/dono configurados, ao carregar em outra página
+            // SEMPRE solicita login e senha imediatamente para evitar que outro cadastro tome posse
+            // das permissões do usuário principal da loja (mesmo se informado ?cadastro=true)
+            setActiveViewState('login');
+          } else if (cadastroParam === 'true' || !rec.isOnboarded) {
+            // Se loja nova ainda não configurada: abre na tela de cadastro
             setActiveViewState('cadastro');
           } else {
-            // Loja já configurada (com login e senha): abre na tela de login para o usuário se logar
+            // Fallback padrão: tela de login
             setActiveViewState('login');
           }
         }
@@ -435,7 +508,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const timer = setTimeout(() => {
       const meta = lojas.find((l) => l.slug === activeSlug);
-      const snap: LojaSnapshot = { empresa, categorias, produtos, config, nichoId, isOnboarded, pedidos };
+      const snap: LojaSnapshot = { empresa, categorias, produtos, config, nichoId, isOnboarded, pedidos, agendamentos };
       const s = calcularStatusLoja({
         slug: activeSlug,
         nome: meta?.nome || empresa.nome || 'Minha Loja',
@@ -460,7 +533,33 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSlug, isCustomerView, activeView, empresa, categorias, produtos, config, nichoId, isOnboarded, dono, plano, pedidos]);
+  }, [activeSlug, isCustomerView, activeView, empresa, categorias, produtos, config, nichoId, isOnboarded, dono, plano, pedidos, agendamentos]);
+
+  // Sincronização: assegura que o nicho petshop contenha a categoria Serviços e Produtos na sessão ativa
+  useEffect(() => {
+    if (nichoId === 'petshop') {
+      setCategorias((prev) => {
+        let mudou = false;
+        let cats = prev.map((c) => {
+          const lower = c.nome.trim().toLowerCase();
+          if (lower.includes('banho') && lower.includes('tosa')) {
+            mudou = true;
+            return { ...c, nome: 'Serviços', icone: '✂️' };
+          }
+          return c;
+        });
+
+        if (!cats.some((c) => c.nome.trim().toLowerCase() === 'produtos' || c.nome.trim().toLowerCase() === 'produto')) {
+          mudou = true;
+          const maxId = cats.reduce((max, c) => (typeof c.id === 'number' && c.id > max ? c.id : max), 0);
+          const nextId = Math.max(maxId + 1, 6);
+          cats = [...cats, { id: nextId, nome: 'Produtos', ordem: cats.length + 1, icone: '📦' }];
+        }
+
+        return mudou ? cats : prev;
+      });
+    }
+  }, [nichoId]);
 
   const setNicho = (newNichoId: string) => {
     setNichoIdState(newNichoId);
@@ -735,6 +834,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setEmpresa(sample.empresa);
     setCategorias(sample.categorias);
     setProdutos(sample.produtos);
+    if (sample.agendamentos) {
+      setAgendamentos([...sample.agendamentos]);
+    } else {
+      setAgendamentos([]);
+    }
   };
 
   const publicarCatalogo = async (slugTarget?: string): Promise<{ ok: boolean; mensagem?: string }> => {
@@ -751,6 +855,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         nichoId,
         isOnboarded: true,
         pedidos,
+        agendamentos,
       };
 
       if (!activeSlug) {
@@ -914,6 +1019,136 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     },
     [activeSlug]
+  );
+
+  const adicionarAgendamento = useCallback(
+    async (
+      slug: string,
+      dados: Omit<Agendamento, 'id' | 'dataCriacao' | 'status'> & { status?: AgendamentoStatus }
+    ): Promise<Agendamento> => {
+      const targetSlug = slug || activeSlug || empresa.slug;
+      const novo: Agendamento = {
+        id: 'ag-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+        dataCriacao: Date.now(),
+        ...dados,
+        status: dados.status || 'solicitado',
+      };
+      setAgendamentos((prev) => [novo, ...prev]);
+
+      if (targetSlug) {
+        // 1. Persistência local no Dexie (resiliência offline)
+        try {
+          const rec = await getLoja(targetSlug);
+          if (rec) {
+            const listaAtual = rec.data.agendamentos || [];
+            rec.data.agendamentos = [novo, ...listaAtual];
+            await saveLoja(rec);
+          }
+        } catch (err) {
+          console.warn('Erro ao persistir agendamento no Dexie:', err);
+        }
+
+        // 2. Persistência no Backend PostgreSQL (ativa o cronjob de lembretes automáticos)
+        try {
+          await api.appointments.create(targetSlug, {
+            id: novo.id,
+            scheduledDate: novo.dataAgendada,
+            scheduledTime: novo.horario,
+            serviceId: String(novo.servicoId),
+            serviceName: novo.servicoNome,
+            price: novo.preco,
+            pet: novo.pet,
+            tutor: novo.tutor,
+            status: novo.status,
+            notes: novo.observacoes,
+            googleCalendarUrl: novo.googleCalendarUrl,
+          });
+        } catch (backendErr) {
+          console.warn('[CatalogContext] Erro ao sincronizar agendamento no backend:', backendErr);
+        }
+      }
+      return novo;
+    },
+    [activeSlug, empresa.slug]
+  );
+
+  const atualizarStatusAgendamento = useCallback(
+    async (slug: string, agendamentoId: string, novoStatus: AgendamentoStatus) => {
+      const targetSlug = slug || activeSlug || empresa.slug;
+      setAgendamentos((prev) =>
+        prev.map((a) => (a.id === agendamentoId ? { ...a, status: novoStatus } : a))
+      );
+
+      if (targetSlug) {
+        // 1. Atualização local no Dexie
+        try {
+          const rec = await getLoja(targetSlug);
+          if (rec && rec.data.agendamentos) {
+            rec.data.agendamentos = rec.data.agendamentos.map((a) =>
+              a.id === agendamentoId ? { ...a, status: novoStatus } : a
+            );
+            await saveLoja(rec);
+          }
+        } catch (err) {
+          console.warn('Erro ao atualizar status do agendamento:', err);
+        }
+
+        // 2. Atualização no Backend (atualiza status para 'confirmado' para o cronjob)
+        try {
+          await api.appointments.updateStatus(targetSlug, agendamentoId, novoStatus);
+        } catch (backendErr) {
+          console.warn('[CatalogContext] Erro ao sincronizar status do agendamento no backend:', backendErr);
+        }
+      }
+    },
+    [activeSlug, empresa.slug]
+  );
+
+  const cancelarAgendamento = useCallback(
+    async (slug: string, agendamentoId: string) => {
+      await atualizarStatusAgendamento(slug, agendamentoId, 'cancelado');
+    },
+    [atualizarStatusAgendamento]
+  );
+
+  const excluirAgendamento = useCallback(
+    async (slug: string, agendamentoId: string) => {
+      const targetSlug = slug || activeSlug || empresa.slug;
+      setAgendamentos((prev) => prev.filter((a) => a.id !== agendamentoId));
+
+      if (targetSlug) {
+        try {
+          const rec = await getLoja(targetSlug);
+          if (rec && rec.data.agendamentos) {
+            rec.data.agendamentos = rec.data.agendamentos.filter((a) => a.id !== agendamentoId);
+            await saveLoja(rec);
+          }
+        } catch (err) {
+          console.warn('Erro ao excluir agendamento:', err);
+        }
+      }
+    },
+    [activeSlug, empresa.slug]
+  );
+
+  const limparTodosAgendamentos = useCallback(
+    async (slug: string) => {
+      const targetSlug = slug || activeSlug || empresa.slug;
+      setAgendamentos([]);
+
+      if (targetSlug) {
+        try {
+          const rec = await getLoja(targetSlug);
+          if (rec) {
+            rec.data.agendamentos = [];
+            await saveLoja(rec);
+          }
+        } catch (err) {
+          console.warn('Erro ao limpar agendamentos:', err);
+        }
+      }
+    },
+    [activeSlug, empresa.slug]
   );
 
   // ---- Multi-tenancy (Super Admin) ----
@@ -1320,6 +1555,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       nome: dados.nome?.trim() || atual?.nome || '',
       email: dados.email?.trim() || atual?.email || '',
       telefone: dados.telefone?.trim() || atual?.telefone || '',
+      senha: dados.senha !== undefined ? (dados.senha ? dados.senha.trim() : undefined) : atual?.senha,
     };
     setDono(proximo);
     setEmpresa((prev) => ({ ...prev, whatsapp: proximo.telefone, telefone: proximo.telefone, email: proximo.email }));
@@ -1362,7 +1598,9 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       nome: dados.nome !== undefined ? dados.nome.trim() : currentDono.nome,
       email: dados.email !== undefined ? dados.email.trim() : currentDono.email,
       telefone: dados.telefone !== undefined ? dados.telefone.trim() : currentDono.telefone,
+      senha: dados.senha !== undefined ? (dados.senha ? dados.senha.trim() : undefined) : currentDono.senha,
     };
+    rec.dono = updatedDono;
     await updateLojaDono(slug, updatedDono);
     await refreshLojas();
   };
@@ -1503,6 +1741,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         pedidos,
         registrarPedido,
         atualizarStatusPedido,
+        agendamentos,
+        adicionarAgendamento,
+        atualizarStatusAgendamento,
+        cancelarAgendamento,
+        excluirAgendamento,
+        limparTodosAgendamentos,
         resetCatalog,
         importBackupJson,
         exportBackupJson,

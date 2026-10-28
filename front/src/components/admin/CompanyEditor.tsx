@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Select } from '../ui/Select';
 import { useCatalog } from '../../context/CatalogContext';
-import { NICHOS } from '../../data/nichos';
+import { NICHOS, isNichoAgendamento } from '../../data/nichos';
 import { processImageFile, formatBytes } from '../../utils/imagePipeline';
 import {
   Store,
@@ -34,6 +34,7 @@ import { ImageDimensionBadge } from '../ui/ImageDimensionBadge';
 import { AutoResizeTextarea } from '../ui/AutoResizeTextarea';
 import { getNicheImagePrompt, getNicheDefaultHeadline } from '../../utils/nichePrompts';
 import { PromoSlide } from '../../types';
+import { toast } from '../ui/Toast';
 
 export const CompanyEditor: React.FC = () => {
   const { empresa, updateEmpresa, nichoId, dono, updateDono, produtos } = useCatalog();
@@ -180,7 +181,7 @@ export const CompanyEditor: React.FC = () => {
       handleUpdateActiveSlide({ imagem: res.main });
       setPromoImgStats(`${formatBytes(res.originalSize)} → ${formatBytes(res.mainSize)} (WebP Panorâmico)`);
     } catch (err) {
-      alert('Erro ao processar imagem da promoção: ' + err);
+      toast.error('Erro ao processar imagem da promoção: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingPromoImg(false);
     }
@@ -263,7 +264,7 @@ export const CompanyEditor: React.FC = () => {
       updateEmpresa({ logo: res.main });
       setLogoStats(`${formatBytes(res.originalSize)} → ${formatBytes(res.mainSize)} (WebP)`);
     } catch (err) {
-      alert('Erro ao processar logo: ' + err);
+      toast.error('Erro ao processar logo: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingLogo(false);
     }
@@ -279,7 +280,7 @@ export const CompanyEditor: React.FC = () => {
       updateEmpresa({ banner: res.main });
       setBannerStats(`${formatBytes(res.originalSize)} → ${formatBytes(res.mainSize)} (WebP)`);
     } catch (err) {
-      alert('Erro ao processar banner: ' + err);
+      toast.error('Erro ao processar banner: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingBanner(false);
     }
@@ -646,6 +647,24 @@ export const CompanyEditor: React.FC = () => {
             className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
+
+        {isNichoAgendamento(nichoId) && (
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>📅 E-mail do Google Agenda (Dono da Loja)</span>
+            </label>
+            <input
+              type="email"
+              placeholder="ex: dono@gmail.com"
+              value={empresa.emailGoogleAgenda || ''}
+              onChange={(e) => updateEmpresa({ emailGoogleAgenda: e.target.value })}
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-teal-600"
+            />
+            <p className="text-[10px] text-slate-500">
+              Usado para convidar seu Google Calendar automaticamente e sincronizar os novos agendamentos com 1 clique.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Título & Mensagem de Boas-Vindas da Vitrine (Headline) */}

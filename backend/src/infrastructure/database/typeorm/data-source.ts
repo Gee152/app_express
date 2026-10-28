@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { envConfig } from '../../../config/env.config.js';
-import { User, Store, Category, Product } from './entities/index.js';
+import { User, Store, Category, Product, Customer, Appointment } from './entities/index.js';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
   database: envConfig.database.name,
   synchronize: envConfig.nodeEnv === 'development', // Sincroniza tabelas no dev; usar migrations em produção
   logging: envConfig.nodeEnv === 'development',
-  entities: [User, Store, Category, Product],
+  entities: [User, Store, Category, Product, Customer, Appointment],
   migrations: ['src/infrastructure/database/typeorm/migrations/*.ts'],
   subscribers: [],
 });

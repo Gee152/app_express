@@ -53,8 +53,26 @@ html.dark {
 }
 
 /* Regras globais automáticas quando dark estiver ativo */
-html.dark .bg-white {
+html.dark .bg-white:not(.banner-btn-agendar) {
   background-color: #1E1E1E !important;
+}
+
+html.dark .banner-btn-agendar,
+.dark .banner-btn-agendar {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+html.dark .banner-btn-agendar:hover,
+.dark .banner-btn-agendar:hover {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+html.dark .banner-btn-agendar svg,
+.dark .banner-btn-agendar svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
 }
 
 html.dark .bg-slate-50,

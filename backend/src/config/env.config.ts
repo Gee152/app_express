@@ -16,4 +16,10 @@ export const envConfig = {
     secret: process.env.JWT_SECRET || 'default_secret_key_antigravity',
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   },
+  whatsapp: {
+    provider: (process.env.WHATSAPP_PROVIDER || 'evolution') as 'evolution' | 'zapi' | 'mock',
+    evolutionApiUrl: process.env.EVOLUTION_API_URL || 'http://localhost:8080',
+    evolutionApiKey: process.env.EVOLUTION_API_KEY || '',
+    evolutionInstanceName: process.env.EVOLUTION_INSTANCE_NAME || 'catalogo_express',
+  },
 };

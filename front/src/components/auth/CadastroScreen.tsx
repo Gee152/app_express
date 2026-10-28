@@ -5,7 +5,7 @@ import { PlanSelectionStep } from './PlanSelectionStep';
 import { TipoPlano } from '../../utils/plano';
 
 export const CadastroScreen: React.FC = () => {
-  const { registrarDono, empresa, setActiveView, isDarkMode, toggleDarkMode } = useCatalog();
+  const { registrarDono, empresa, dono, activeSlug, setActiveView, isDarkMode, toggleDarkMode } = useCatalog();
   const [step, setStep] = useState<'dados' | 'plano'>('dados');
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -13,6 +13,60 @@ export const CadastroScreen: React.FC = () => {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  const hasExistingOwner = Boolean(activeSlug && dono?.email && dono.email.trim() !== '');
+
+  if (hasExistingOwner) {
+    return (
+      <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#121212] text-[#212529] dark:text-[#FFFFFF] flex items-center justify-center p-4 relative transition-colors">
+        <button
+          onClick={toggleDarkMode}
+          className="absolute top-4 right-4 p-2.5 rounded-xl border border-[#E0E0E0] dark:border-[#333333] bg-white dark:bg-[#1E1E1E] text-[#212529] dark:text-amber-400 hover:brightness-95 transition-all cursor-pointer inline-flex items-center justify-center shadow-xs"
+          title={isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
+        >
+          {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+
+        <div className="w-full max-w-md bg-white dark:bg-[#1E1E1E] rounded-3xl border border-[#E0E0E0] dark:border-[#333333] shadow-xl p-6 sm:p-8 space-y-6 text-center transition-colors">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl font-black text-[#212529] dark:text-[#FFFFFF] leading-tight">
+              Acesso Protegido
+            </h1>
+            <p className="text-xs text-[#6C757D] dark:text-[#B0BEC5]">
+              A loja <strong className="text-[#4F3BFF] dark:text-[#A58BFF]">{empresa.nome || activeSlug}</strong> já possui um usuário administrador cadastrado (<span className="font-mono font-semibold">{dono?.email}</span>).
+            </p>
+            <p className="text-xs text-[#6C757D] dark:text-[#B0BEC5]">
+              Para segurança do estabelecimento, novos cadastros não são permitidos neste link. Utilize seu e-mail e senha cadastrados para acessar.
+            </p>
+          </div>
+
+          <div className="pt-2 space-y-3">
+            <button
+              type="button"
+              onClick={() => setActiveView('login')}
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-extrabold text-sm rounded-xl shadow-lg cursor-pointer flex items-center justify-center gap-2 border border-white/20 transition-all transform active:scale-98"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Entrar com Login e Senha</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = window.location.origin + '/?criar=loja';
+              }}
+              className="text-xs font-semibold text-[#6C757D] dark:text-[#B0BEC5] hover:text-[#4F3BFF] dark:hover:text-[#A58BFF] cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+            >
+              <span>Deseja criar outra loja? Cadastre uma nova loja aqui</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleAdvanceToPlan = (e: React.FormEvent) => {
     e.preventDefault();

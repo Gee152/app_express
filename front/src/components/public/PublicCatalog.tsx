@@ -3,6 +3,9 @@ import { useCatalog } from '../../context/CatalogContext';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CartDrawer } from './CartDrawer';
 import { PromoSliderBanner } from './PromoSliderBanner';
+import { AgendamentoStepsModal } from './AgendamentoStepsModal';
+import { GradeHorariosPublicaModal } from './GradeHorariosPublicaModal';
+import { isNichoAgendamento } from '../../data/nichos';
 import {
   Search,
   ShoppingBag,
@@ -28,6 +31,7 @@ import {
   Phone,
   Moon,
   Sun,
+  Calendar,
 } from 'lucide-react';
 import { Produto, TemaCores } from '../../types';
 import { getContrastText, darkenColor } from '../../utils/colors';
@@ -45,10 +49,13 @@ export const PublicCatalog: React.FC = () => {
     isOnboarded,
     isCustomerView,
     nichoId,
+    agendamentos,
     isDarkMode,
     toggleDarkMode,
     trackCliqueLinkExterno,
   } = useCatalog();
+
+  const isAgendamentoNiche = isNichoAgendamento(nichoId);
 
   const [activeCategory, setActiveCategory] = useState<number | string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +65,11 @@ export const PublicCatalog: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showStatusTooltip, setShowStatusTooltip] = useState(false);
+
+  const [isAgendamentoOpen, setIsAgendamentoOpen] = useState(false);
+  const [isGradeHorariosOpen, setIsGradeHorariosOpen] = useState(false);
+  const [dataPreSelecionada, setDataPreSelecionada] = useState('');
+  const [horarioPreSelecionado, setHorarioPreSelecionado] = useState('');
 
   useEffect(() => {
     if (showStatusTooltip) {
@@ -207,10 +219,12 @@ export const PublicCatalog: React.FC = () => {
               onMouseEnter={() => setShowStatusTooltip(true)}
               onMouseLeave={() => setShowStatusTooltip(false)}
               className="h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-md shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-              title="Status da Loja: Aberto para Pedidos"
+              title={isAgendamentoNiche ? 'Status da Loja: Aberto para Agendamentos' : 'Status da Loja: Aberto para Pedidos'}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-              <span className="hidden sm:inline">Aberto para Pedidos</span>
+              <span className="hidden sm:inline">
+                {isAgendamentoNiche ? 'Aberto para Agendamentos' : 'Aberto para Pedidos'}
+              </span>
               <span className="sm:hidden font-bold">Aberto</span>
             </button>
 
@@ -222,8 +236,12 @@ export const PublicCatalog: React.FC = () => {
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                 <div>
-                  <p className="font-bold text-emerald-300">Aberto para Pedidos</p>
-                  <p className="text-[10px] text-slate-300 font-normal">Recebendo novos pedidos online agora</p>
+                  <p className="font-bold text-emerald-300">
+                    {isAgendamentoNiche ? 'Aberto para Agendamentos' : 'Aberto para Pedidos'}
+                  </p>
+                  <p className="text-[10px] text-slate-300 font-normal">
+                    {isAgendamentoNiche ? 'Recebendo novos agendamentos online agora' : 'Recebendo novos pedidos online agora'}
+                  </p>
                 </div>
               </div>
             )}
@@ -256,8 +274,8 @@ export const PublicCatalog: React.FC = () => {
               className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-sm transition-all active:scale-95 cursor-pointer hover:brightness-110 border border-white/20 backdrop-blur-md flex items-center gap-1.5 sm:gap-2 flex-shrink-0 whitespace-nowrap"
               style={{ backgroundColor: primary, color: primaryContrast }}
             >
-              <ShoppingBag className="w-4 h-4 flex-shrink-0" />
-              <span>Pedido ({cartTotalItems})</span>
+              {isAgendamentoNiche ? <Calendar className="w-4 h-4 flex-shrink-0" /> : <ShoppingBag className="w-4 h-4 flex-shrink-0" />}
+              <span>{isAgendamentoNiche ? 'Agendamento' : 'Pedido'} ({cartTotalItems})</span>
               {cartTotalPrice > 0 && (
                 <span
                   className="hidden md:inline px-1.5 py-0.5 rounded-md text-xs font-black"
@@ -339,6 +357,55 @@ export const PublicCatalog: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* Banner / Bloco de Agendamento Online para Pet Shop & Clínicas */}
+      {isAgendamentoNiche && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-teal-800 to-emerald-700 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-teal-500/30">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl flex-shrink-0 shadow-xs">
+              {nichoId === 'petshop' ? '🐾' : '🩺'}
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] uppercase font-black tracking-widest text-teal-200">
+                Agendamento Online Facilitado
+              </span>
+              <h3 className="text-base sm:text-lg font-extrabold text-white">
+                {nichoId === 'petshop' ? 'Serviços e Consultas Veterinárias' : 'Serviços e Atendimentos Especializados'}
+              </h3>
+              <p className="text-xs text-teal-100/90 font-medium max-w-md">
+                {nichoId === 'petshop'
+                  ? 'Escolha o serviço, informe os dados do seu pet e agende em poucos cliques.'
+                  : 'Escolha o serviço, selecione o melhor horário e agende em poucos cliques.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button
+              onClick={() => setIsGradeHorariosOpen(true)}
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 backdrop-blur-xs border border-white/20"
+            >
+              <Clock className="w-4 h-4 text-white" />
+              <span>Ver Horários Livres</span>
+            </button>
+            <button
+              onClick={() => {
+                setHorarioPreSelecionado('');
+                setDataPreSelecionada('');
+                setIsAgendamentoOpen(true);
+              }}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 border banner-btn-agendar ${
+                isDarkActive
+                  ? 'bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-xs'
+                  : 'bg-white hover:bg-slate-100 text-teal-900 border-transparent shadow-sm dark:bg-white/15 dark:hover:bg-white/25 dark:text-white dark:border-white/20'
+              }`}
+            >
+              <Calendar className={`w-4 h-4 ${isDarkActive ? 'text-white' : 'text-teal-700 dark:text-white'}`} />
+              <span>Agendar Horário</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search Bar & Desktop Layout Controls */}
       <div className="flex items-center gap-3">
@@ -478,10 +545,15 @@ export const PublicCatalog: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(p, 1);
+                        if (p.opcoes && p.opcoes.length > 0) {
+                          setSelectedProduct(p);
+                        } else {
+                          addToCart(p, 1);
+                        }
                       }}
-                      className="w-8 h-8 md:w-8 md:h-8 rounded-xl font-black flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-xs"
+                      className="w-8 h-8 md:w-8 md:h-8 rounded-xl font-black flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer"
                       style={{ backgroundColor: primary, color: primaryContrast }}
+                      title={p.opcoes && p.opcoes.length > 0 ? 'Escolher opções e adicionais' : 'Adicionar ao pedido'}
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />
                     </button>
@@ -1012,7 +1084,7 @@ export const PublicCatalog: React.FC = () => {
                 borderColor: surface,
               }}
             >
-              <ShoppingBag className="w-5 h-5" />
+              {isAgendamentoNiche ? <Calendar className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
               {cartTotalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black">
                   {cartTotalItems}
@@ -1052,7 +1124,30 @@ export const PublicCatalog: React.FC = () => {
       )}
 
       {/* Cart Drawer */}
-      {isCartOpen && <CartDrawer onClose={() => setIsCartOpen(false)} />}
+      {isCartOpen && (
+        <CartDrawer
+          onClose={() => setIsCartOpen(false)}
+          onOpenProductModal={(p) => setSelectedProduct(p)}
+        />
+      )}
+
+      {/* Modais de Agendamento em Steps e Grade Pública */}
+      <AgendamentoStepsModal
+        isOpen={isAgendamentoOpen}
+        onClose={() => setIsAgendamentoOpen(false)}
+        horarioInicial={horarioPreSelecionado}
+        dataInicial={dataPreSelecionada}
+      />
+
+      <GradeHorariosPublicaModal
+        isOpen={isGradeHorariosOpen}
+        onClose={() => setIsGradeHorariosOpen(false)}
+        onSelectHorario={(data, horario) => {
+          setDataPreSelecionada(data);
+          setHorarioPreSelecionado(horario);
+          setIsAgendamentoOpen(true);
+        }}
+      />
     </div>
   );
 };

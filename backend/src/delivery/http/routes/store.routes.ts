@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { StoreController } from '../controllers/StoreController.js';
 import { StoreSubscriptionController } from '../controllers/StoreSubscriptionController.js';
+import { CustomerAuthController } from '../controllers/CustomerAuthController.js';
+import { AppointmentController } from '../controllers/AppointmentController.js';
 import { validateDto } from '../middlewares/ValidationMiddleware.js';
 import { CreateStoreDTO } from '../../../domain/dtos/store/CreateStoreDTO.js';
 import { TogglePaymentDTO } from '../../../domain/dtos/store/TogglePaymentDTO.js';
@@ -14,7 +16,8 @@ export function createStoreRoutes(
   storeController: StoreController,
   storeSubscriptionController: StoreSubscriptionController,
   tokenProvider: ITokenProvider,
-  storeRepository: IStoreRepository
+  storeRepository: IStoreRepository,
+  customerAuthController?: CustomerAuthController
 ): Router {
   const router = Router();
 
@@ -47,6 +50,23 @@ export function createStoreRoutes(
 
   // 6. Consultar loja por slug (Público para clientes finais do catálogo)
   router.get('/:slug', storeController.getBySlug);
+
+  // 6.1 Integração Google Calendar (Público/Dono: link 1-clique e download .ics)
+  router.get('/:slug/calendar/sync-link', storeController.getCalendarLink);
+  router.get('/:slug/calendar/event.ics', storeController.downloadCalendarIcs);
+
+  // 6.2 Autenticação & Cadastro de Clientes/Tutores com Pets (Público do Catálogo)
+  if (customerAuthController) {
+    router.post('/:slug/customers/register', customerAuthController.register);
+    router.post('/:slug/customers/login', customerAuthController.login);
+    router.get('/:slug/customers/me', customerAuthController.me);
+  }
+
+  // 7. Rotas de Agendamentos da Loja
+  const appointmentController = new AppointmentController();
+  router.post('/:slug/appointments', appointmentController.create);
+  router.get('/:slug/appointments', appointmentController.list);
+  router.patch('/:slug/appointments/:id/status', appointmentController.updateStatus);
 
   // 7. Atualizar / Publicar loja (Protegido: Dono da loja ou Superadmin)
   router.put(

@@ -43,6 +43,7 @@ import { usePWA } from '@/src/hooks/usePWA';
 import { PWAInstallModal } from '../pwa/PWAInstallModal';
 import { Select } from '../ui/Select';
 import { api } from '../../services/api';
+import { toast } from '../ui/Toast';
 
 interface PlatformUser {
   id: string;
@@ -228,7 +229,7 @@ export const StoreManager: React.FC = () => {
         setEditCredsModal(null);
       }, 1000);
     } catch (err) {
-      alert('Erro ao salvar credenciais: ' + err);
+      toast.error('Erro ao salvar credenciais: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setSavingCreds(false);
     }
@@ -298,7 +299,9 @@ export const StoreManager: React.FC = () => {
 
   const handleCopyAccessLink = async (slug: string) => {
     liberarLoja(slug);
-    const url = window.location.origin + window.location.pathname + '?acesso=' + encodeURIComponent(slug) + '&cadastro=true';
+    const storeObj = lojas.find((l) => l.slug === slug);
+    const hasCreds = Boolean(storeObj?.dono?.email && storeObj.dono.email.trim() !== '');
+    const url = window.location.origin + window.location.pathname + '?acesso=' + encodeURIComponent(slug) + (hasCreds ? '' : '&cadastro=true');
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
       setAccessCopied(slug);
@@ -337,9 +340,9 @@ export const StoreManager: React.FC = () => {
     reader.onload = async (ev) => {
       const ok = await importEcosystemJson(String(ev.target?.result || ''));
       if (ok) {
-        alert('Backup geral restaurado com sucesso!');
+        toast.success('Backup geral restaurado com sucesso!');
       } else {
-        alert('Falha ao importar o backup geral.');
+        toast.error('Falha ao importar o backup geral.');
       }
     };
     reader.readAsText(file);

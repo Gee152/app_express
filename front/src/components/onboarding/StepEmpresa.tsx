@@ -6,6 +6,7 @@ import { processImageFile, formatBytes } from '../../utils/imagePipeline';
 import { Store, Phone, MapPin, Instagram, Facebook, Image as ImageIcon, Sparkles, Loader2, Check } from 'lucide-react';
 import { ImageDimensionBadge } from '../ui/ImageDimensionBadge';
 import { getNicheImagePrompt } from '../../utils/nichePrompts';
+import { toast } from '../ui/Toast';
 
 export const StepEmpresa: React.FC = () => {
   const { empresa, updateEmpresa, nichoId } = useCatalog();
@@ -27,7 +28,7 @@ export const StepEmpresa: React.FC = () => {
       updateEmpresa({ logo: res.main });
       setLogoStats({ orig: res.originalSize, opt: res.mainSize });
     } catch (err) {
-      alert('Erro ao processar logo: ' + err);
+      toast.error('Erro ao processar logo: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingLogo(false);
     }
@@ -43,7 +44,7 @@ export const StepEmpresa: React.FC = () => {
       updateEmpresa({ banner: res.main });
       setBannerStats({ orig: res.originalSize, opt: res.mainSize });
     } catch (err) {
-      alert('Erro ao processar banner: ' + err);
+      toast.error('Erro ao processar banner: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingBanner(false);
     }

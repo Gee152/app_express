@@ -97,6 +97,7 @@ export const NICHOS: NichoConfig[] = [
     templatePadrao: 'servicos',
     temasRecomendados: ['romantic-blend', 'purple-blend', 'sunset-view-2'],
     camposObrigatorios: ['nome', 'whatsapp'],
+    permiteAgendamento: true,
     camposPersonalizados: [
       {
         id: 'especialidades',
@@ -210,6 +211,7 @@ export const NICHOS: NichoConfig[] = [
     templatePadrao: 'saude',
     temasRecomendados: ['purple-blend', 'peacock-feather', 'romantic-blend'],
     camposObrigatorios: ['nome', 'whatsapp'],
+    permiteAgendamento: true,
     camposPersonalizados: [
       {
         id: 'especialidades',
@@ -301,6 +303,54 @@ export const NICHOS: NichoConfig[] = [
     },
   },
   {
+    id: 'petshop',
+    nome: 'Pet Shop & Clínicas',
+    icone: '🐾',
+    descricao: 'Banho & tosa, consultas veterinárias, vacinas e produtos pet com agendamento online.',
+    exemplos: ['Pet Shop', 'Clínica Veterinária', 'Banho & Tosa', 'Hospital Pet', 'Daycare'],
+    templatePadrao: 'petshop',
+    temasRecomendados: ['peacock-feather', 'sunset-view-2', 'sunset-view'],
+    camposObrigatorios: ['nome', 'whatsapp'],
+    permiteAgendamento: true,
+    camposPersonalizados: [
+      {
+        id: 'especialidades_pet',
+        label: 'Serviços & Especialidades',
+        tipo: 'text',
+        obrigatorio: false,
+        placeholder: 'Ex: Banho e Tosa, Consulta Geral, Vacinas, Dermatologia, Cirurgia',
+      },
+      {
+        id: 'animais_atendidos',
+        label: 'Animais Atendidos',
+        tipo: 'text',
+        obrigatorio: false,
+        placeholder: 'Ex: Cães, Gatos, Pássaros, Pequenos Roedores',
+      },
+      {
+        id: 'plantao_emergencia',
+        label: 'Plantão ou Emergência',
+        tipo: 'text',
+        obrigatorio: false,
+        placeholder: 'Ex: Atendimento emergencial até 22h ou 24h sob aviso prévio',
+      },
+      {
+        id: 'regras_agendamento',
+        label: 'Instruções para Agendamento',
+        tipo: 'textarea',
+        obrigatorio: false,
+        placeholder: 'Ex: Trazer carteirinha de vacinação em dia para banho/tosa e consultas.',
+      },
+    ],
+    configuracaoProduto: {
+      temCategoria: true,
+      temDescricao: true,
+      temPreco: true,
+      temImagem: true,
+      camposExtras: ['porte_indicado', 'duracao_estimada'],
+    },
+  },
+  {
     id: 'outros',
     nome: 'Outros / Personalizado',
     icone: '📋',
@@ -334,3 +384,19 @@ export const NICHOS: NichoConfig[] = [
     },
   },
 ];
+
+/**
+ * Retorna se o nicho trabalha exclusivamente com agendamentos (petshop, clínicas, serviços de estética)
+ * ou se trabalha com pedidos (restaurantes, vitrines de lojas, etc.).
+ */
+export function isNichoAgendamento(nichoId?: string): boolean {
+  if (!nichoId) return false;
+  const n = NICHOS.find((item) => item.id === nichoId);
+  return Boolean(
+    n?.permiteAgendamento ||
+    nichoId === 'petshop' ||
+    nichoId === 'saude' ||
+    nichoId === 'servicos'
+  );
+}
+

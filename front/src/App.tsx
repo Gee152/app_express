@@ -1,6 +1,10 @@
 import React, { Suspense, lazy } from 'react';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
+import { CustomerAuthProvider } from './context/CustomerAuthContext';
+import { CustomerAuthModal } from './components/public/CustomerAuthModal';
 import { Loader2, Store } from 'lucide-react';
+import { ToastContainer } from './components/ui/Toast';
+import { isNichoAgendamento } from './data/nichos';
 
 // Code-splitting: cada tela vira um chunk separado, carregado sob demanda.
 // As telas usam named exports; React.lazy espera `default`, então mapeamos.
@@ -11,6 +15,7 @@ const StoreManager = lazy(() => import('./components/admin/StoreManager').then((
 const CadastroScreen = lazy(() => import('./components/auth/CadastroScreen').then((m) => ({ default: m.CadastroScreen })));
 const LoginScreen = lazy(() => import('./components/auth/LoginScreen').then((m) => ({ default: m.LoginScreen })));
 const PedidosView = lazy(() => import('./components/admin/PedidosView').then((m) => ({ default: m.PedidosView })));
+const AgendamentosView = lazy(() => import('./components/admin/AgendamentosView').then((m) => ({ default: m.AgendamentosView })));
 
 const LoadingScreen: React.FC = () => {
   const { empresa } = useCatalog();
@@ -47,14 +52,22 @@ const LoadingScreen: React.FC = () => {
 };
 
 const MainAppContent: React.FC = () => {
-  const { activeView, isLoading, isClienteLogado } = useCatalog();
+  const { activeView, isLoading, isClienteLogado, nichoId } = useCatalog();
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   // Cliente logado não tem acesso ao Super Admin (Lojas)
-  const view = isClienteLogado && activeView === 'storemanager' ? 'admin' : activeView;
+  let view = isClienteLogado && activeView === 'storemanager' ? 'admin' : activeView;
+
+  // Regra de Exclusividade Mútua: se tiver agendamento, não tem pedido; se tiver pedido, não tem agendamento
+  const isAgendamento = isNichoAgendamento(nichoId);
+  if (view === 'pedidos' && isAgendamento) {
+    view = 'agendamentos';
+  } else if (view === 'agendamentos' && !isAgendamento) {
+    view = 'pedidos';
+  }
 
   return (
     <Suspense fallback={<LoadingScreen />}>
@@ -65,6 +78,7 @@ const MainAppContent: React.FC = () => {
       {(view === 'login' || view === 'superadmin-login') && <LoginScreen />}
       {view === 'onboarding' && <OnboardingWizard />}
       {view === 'pedidos' && <PedidosView />}
+      {view === 'agendamentos' && <AgendamentosView />}
     </Suspense>
   );
 };
@@ -72,7 +86,11 @@ const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <CatalogProvider>
-      <MainAppContent />
+      <CustomerAuthProvider>
+        <MainAppContent />
+        <CustomerAuthModal />
+        <ToastContainer />
+      </CustomerAuthProvider>
     </CatalogProvider>
   );
 }

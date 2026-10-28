@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController.js';
 import { StoreController } from '../controllers/StoreController.js';
 import { StoreSubscriptionController } from '../controllers/StoreSubscriptionController.js';
+import { CustomerAuthController } from '../controllers/CustomerAuthController.js';
 import { ITokenProvider } from '../../../domain/providers/ITokenProvider.js';
 import { IStoreRepository } from '../../../domain/repositories/IStoreRepository.js';
 import { createAuthRoutes } from './auth.routes.js';
@@ -12,6 +13,7 @@ export interface RouteDependencies {
   authController: AuthController;
   storeController: StoreController;
   storeSubscriptionController: StoreSubscriptionController;
+  customerAuthController?: CustomerAuthController;
   tokenProvider: ITokenProvider;
   storeRepository: IStoreRepository;
 }
@@ -30,7 +32,8 @@ export function createApiRouter(deps: RouteDependencies): Router {
       deps.storeController,
       deps.storeSubscriptionController,
       deps.tokenProvider,
-      deps.storeRepository
+      deps.storeRepository,
+      deps.customerAuthController
     )
   );
 

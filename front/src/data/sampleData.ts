@@ -1,10 +1,17 @@
-import { Empresa, Categoria, Produto, Config } from '../types';
+import { Empresa, Categoria, Produto, Config, Agendamento } from '../types';
 import { TEMAS } from './temas';
+
+const getTodayStr = (offsetDays: number = 0): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+};
 
 export interface SampleNicheData {
   empresa: Empresa;
   categorias: Categoria[];
   produtos: Produto[];
+  agendamentos?: Agendamento[];
 }
 
 export const SAMPLE_DATA: Record<string, SampleNicheData> = {
@@ -470,6 +477,145 @@ export const SAMPLE_DATA: Record<string, SampleNicheData> = {
         ordem: 2,
       },
     ],
+  },
+  petshop: {
+    empresa: {
+      nome: 'PetCare Clínica & Pet Shop',
+      telefone: '(11) 97777-2222',
+      whatsapp: '5511977772222',
+      instagram: '@petcare_clinica',
+      endereco: 'Av. dos Bichos, 500 - Jardim Primavera, São Paulo - SP',
+      pix: 'contato@petcarevet.com.br',
+      email: 'contato@petcarevet.com.br',
+      especialidades_pet: 'Serviços Pet, Consultas Clínicas, Vacinação, Dermatologia, Cirurgia Geral',
+      animais_atendidos: 'Cães, Gatos, Aves e Roedores',
+      plantao_emergencia: 'Atendimento emergencial de Segunda a Sábado até 22h',
+      regras_agendamento: 'Para serviços de estética e consultas, favor trazer carteirinha de vacinação do pet em dia.',
+      formas_pagamento: 'PIX com 5% de desconto, Cartões de Débito/Crédito em até 6x',
+      metaTitle: 'PetCare - Clínica Veterinária & Pet Shop Completo',
+      metaDescription: 'Consultas com veterinários qualificados, serviços pet profissionais, vacinas e produtos com agendamento online.',
+      slug: 'petcare-clinica',
+    },
+    categorias: [
+      { id: 1, nome: 'Serviços', ordem: 1, icone: '✂️' },
+      { id: 2, nome: 'Consultas & Exames', ordem: 2, icone: '🩺' },
+      { id: 3, nome: 'Vacinas & Prevenção', ordem: 3, icone: '💉' },
+      { id: 4, nome: 'Rações & Nutrição', ordem: 4, icone: '🍖' },
+      { id: 5, nome: 'Farmácia Veterinária', ordem: 5, icone: '💊' },
+      { id: 6, nome: 'Produtos', ordem: 6, icone: '📦' },
+    ],
+    produtos: [
+      {
+        id: 801,
+        nome: 'Banho & Tosa Higiênica Completa',
+        descricao: 'Banho relaxante com xampu hipoalergênico, hidratação profunda, secagem cuidadosa, tosa higiênica, limpeza de ouvidos e corte de unhas.',
+        categoria: 1,
+        preco: 75.00,
+        status: true,
+        destaque: true,
+        ordem: 1,
+        porte_indicado: 'Pequeno / Médio',
+        duracao_estimada: '60 min',
+        opcoes: [
+          {
+            id: 'p801porte',
+            nome: 'Porte do Animal',
+            tipo: 'unica',
+            itens: [
+              { id: 'p801p1', nome: 'Porte Pequeno (até 10kg)', preco: 0 },
+              { id: 'p801p2', nome: 'Porte Médio (11 a 20kg)', preco: 20 },
+              { id: 'p801p3', nome: 'Porte Grande (acima de 20kg)', preco: 40 },
+            ],
+          },
+          {
+            id: 'p801extras',
+            nome: 'Serviços Adicionais',
+            tipo: 'multipla',
+            itens: [
+              { id: 'p801e1', nome: 'Hidratação com Óleo de Argan', preco: 25 },
+              { id: 'p801e2', nome: 'Tosa Geral na Tesoura', preco: 35 },
+              { id: 'p801e3', nome: 'Escovação Dentária com Gel Pet', preco: 15 },
+            ],
+          },
+        ],
+      },
+      {
+        id: 802,
+        nome: 'Banho Terapêutico Anti-alérgico',
+        descricao: 'Banhos medicamentosos com dermocosméticos específicos para peles atópicas e controle de alergias ou fungos.',
+        categoria: 1,
+        preco: 95.00,
+        status: true,
+        destaque: false,
+        ordem: 2,
+        porte_indicado: 'Todos os portes',
+        duracao_estimada: '50 min',
+      },
+      {
+        id: 803,
+        nome: 'Consulta Veterinária - Clínica Geral',
+        descricao: 'Avaliação clínica completa com médico veterinário qualificado: exame físico detalhado, aferição de parâmetros e orientações preventivas.',
+        categoria: 2,
+        preco: 140.00,
+        status: true,
+        destaque: true,
+        ordem: 3,
+        duracao_estimada: '45 min',
+      },
+      {
+        id: 804,
+        nome: 'Vacina Polivalente V10 Importada Canina',
+        descricao: 'Imunização preventiva completa contra cinomose, parvovirose, coronavirose, hepatite infecciosa, adenovirose e leptospiroses.',
+        categoria: 3,
+        preco: 110.00,
+        status: true,
+        destaque: true,
+        ordem: 4,
+        duracao_estimada: '20 min',
+      },
+      {
+        id: 805,
+        nome: 'Vacina Quíntupla Felina (V5)',
+        descricao: 'Proteção essencial contra rinotraqueíte, calicivirose, panleucopenia, clamidiose e leucemia felina (FeLV).',
+        categoria: 3,
+        preco: 125.00,
+        status: true,
+        destaque: false,
+        ordem: 5,
+        duracao_estimada: '20 min',
+      },
+      {
+        id: 806,
+        nome: 'Ração Super Premium Cães Adultos 15kg',
+        descricao: 'Alimento completo e balanceado sem corantes artificiais, rico em ômega 3 e 6 para pelagem brilhante e saúde digestiva.',
+        categoria: 4,
+        preco: 259.90,
+        status: true,
+        destaque: true,
+        ordem: 6,
+      },
+      {
+        id: 807,
+        nome: 'Antipulgas e Carrapatos Simparic 10 a 20kg',
+        descricao: 'Comprimido mastigável saboroso com ação rápida e eficácia sustentada por até 35 dias contra pulgas e carrapatos.',
+        categoria: 5,
+        preco: 119.00,
+        status: true,
+        destaque: false,
+        ordem: 7,
+      },
+      {
+        id: 808,
+        nome: 'Cama para Pets Nuvem Conforto',
+        descricao: 'Cama anatômica ultra macia com fundo antiderrapante e tecido lavável de alta durabilidade, ideal para descanso de cães e gatos.',
+        categoria: 6,
+        preco: 89.90,
+        status: true,
+        destaque: false,
+        ordem: 8,
+      },
+    ],
+    agendamentos: [],
   },
   outros: {
     empresa: {

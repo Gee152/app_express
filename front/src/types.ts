@@ -29,6 +29,7 @@ export interface NichoConfig {
     temImagem: boolean;
     camposExtras: string[];
   };
+  permiteAgendamento?: boolean;
 }
 
 export interface TemaCores {
@@ -95,6 +96,7 @@ export interface Empresa {
   horarioFuncionamento?: string;
   pix?: string;
   email?: string;
+  emailGoogleAgenda?: string;
   logo?: string;
   banner?: string;
   promoBanner?: PromoBannerConfig;
@@ -215,4 +217,56 @@ export interface ProcessedImageResult {
   width: number;
   height: number;
   format: string;
+}
+
+export type AgendamentoStatus = 'solicitado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado';
+
+export interface PetInfo {
+  nome: string;
+  especie: 'cao' | 'gato' | 'ave' | 'silvestre' | 'outro';
+  porte?: 'pequeno' | 'medio' | 'grande';
+  raca?: string;
+  idade?: string;
+  observacoes?: string;
+}
+
+export interface TutorInfo {
+  nome: string;
+  whatsapp: string;
+  email?: string;
+}
+
+export interface Agendamento {
+  id: string;
+  dataCriacao: number;
+  dataAgendada: string; // YYYY-MM-DD
+  horario: string; // HH:mm
+  servicoId: number | string;
+  servicoNome: string;
+  preco: number;
+  pet: PetInfo;
+  tutor: TutorInfo;
+  status: AgendamentoStatus;
+  observacoes?: string;
+  googleCalendarUrl?: string;
+}
+
+export interface CustomerPet {
+  id: string;
+  name: string;
+  breed?: string;
+  species?: 'cao' | 'gato' | 'ave' | 'silvestre' | 'outro' | string;
+  specialCare?: string;
+  hasTransportBox?: boolean;
+}
+
+export interface Customer {
+  id: string;
+  storeId?: string;
+  name: string;
+  email: string;
+  phone: string;
+  hasTransportBox: boolean;
+  pets: CustomerPet[];
+  createdAt?: string;
 }

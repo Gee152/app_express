@@ -68,4 +68,121 @@ export class StoreController {
       next(err);
     }
   };
+
+  public getCalendarLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { slug } = req.params;
+      const store = await this.getStoreBySlugUseCase.execute(slug);
+
+      const servicoNome = String(req.query.servicoNome || 'Serviço');
+      const petNome = String(req.query.petNome || 'Pet');
+      const petEspecie = String(req.query.petEspecie || 'cao');
+      const tutorNome = String(req.query.tutorNome || 'Cliente');
+      const tutorTelefone = String(req.query.tutorTelefone || '');
+      const dataAgendada = String(req.query.dataAgendada || '');
+      const horario = String(req.query.horario || '09:00');
+      const modalidade = String(req.query.modalidade || '');
+      const endereco = String(req.query.endereco || '');
+
+      const ownerEmail = String(
+        store.config?.empresa?.emailGoogleAgenda ||
+        store.config?.empresa?.email ||
+        ''
+      ).trim();
+
+      const petIcon = petEspecie === 'gato' ? '🐱' : petEspecie === 'ave' ? '🦜' : '🐶';
+      const title = `🐾 [${store.name}] ${servicoNome} - ${petIcon} ${petNome} (Tutor: ${tutorNome})`;
+
+      const [year, month, day] = dataAgendada.split('-').map(Number);
+      const [hours, minutes] = horario.split(':').map(Number);
+      const start = new Date(year || new Date().getFullYear(), (month || 1) - 1, day || new Date().getDate(), hours || 9, minutes || 0);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const startIso = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(start.getHours())}${pad(start.getMinutes())}00`;
+      const endIso = `${end.getFullYear()}${pad(end.getMonth() + 1)}${pad(end.getDate())}T${pad(end.getHours())}${pad(end.getMinutes())}00`;
+
+      let details = `AGENDAMENTO DE SERVIÇO - ${store.name}\n\n`;
+      details += `• Data: ${dataAgendada.split('-').reverse().join('/')} às ${horario}\n`;
+      details += `• Serviço: ${servicoNome}\n`;
+      details += `• Pet: ${petNome} (${petEspecie})\n`;
+      details += `• Tutor: ${tutorNome} (${tutorTelefone})\n`;
+      if (modalidade) details += `• Modalidade: ${modalidade}\n`;
+      if (endereco) details += `• Endereço: ${endereco}\n`;
+
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: title,
+        dates: `${startIso}/${endIso}`,
+        details,
+        location: endereco || store.name,
+      });
+
+      if (ownerEmail && ownerEmail.includes('@')) {
+        params.set('add', ownerEmail);
+      }
+
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
+
+      res.status(200).json({
+        googleCalendarUrl,
+        ownerEmail: ownerEmail || null,
+        title,
+        startIso,
+        endIso,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public downloadCalendarIcs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { slug } = req.params;
+      const store = await this.getStoreBySlugUseCase.execute(slug);
+
+      const servicoNome = String(req.query.servicoNome || 'Serviço');
+      const petNome = String(req.query.petNome || 'Pet');
+      const tutorNome = String(req.query.tutorNome || 'Cliente');
+      const dataAgendada = String(req.query.dataAgendada || '');
+      const horario = String(req.query.horario || '09:00');
+
+      const [year, month, day] = dataAgendada.split('-').map(Number);
+      const [hours, minutes] = horario.split(':').map(Number);
+      const start = new Date(year || new Date().getFullYear(), (month || 1) - 1, day || new Date().getDate(), hours || 9, minutes || 0);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const startIso = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(start.getHours())}${pad(start.getMinutes())}00`;
+      const endIso = `${end.getFullYear()}${pad(end.getMonth() + 1)}${pad(end.getDate())}T${pad(end.getHours())}${pad(end.getMinutes())}00`;
+
+      const title = `Agendamento ${servicoNome} - ${petNome} (Tutor: ${tutorNome})`;
+      const cleanText = (str = '') => str.replace(/\r?\n/g, '\\n').replace(/,/g, '\\,');
+
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Catalogo Express//Agendamentos//PT-BR',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:agendamento-${Date.now()}@catalogoexpress`,
+        `DTSTAMP:${startIso}Z`,
+        `DTSTART:${startIso}`,
+        `DTEND:${endIso}`,
+        `SUMMARY:${cleanText(title)}`,
+        `DESCRIPTION:${cleanText(`Serviço: ${servicoNome}\\nPet: ${petNome}\\nTutor: ${tutorNome}`)}`,
+        `LOCATION:${cleanText(store.name)}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR',
+      ].join('\r\n');
+
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="agendamento-${petNome.toLowerCase().replace(/\\s+/g, '-')}.ics"`);
+      res.status(200).send(ics);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
