@@ -49,6 +49,20 @@ jobs:
   test-backend:
     name: Backend Tests (Jest)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: catalogo_express
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d catalogo_express"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repositório
         uses: actions/checkout@v4
@@ -69,3 +83,10 @@ jobs:
         run: |
           cd backend
           npm test -- --passWithNoTests
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: catalogo_express
