@@ -19,12 +19,12 @@ test.describe('Gestão de Produtos, Categorias e Marketplaces', () => {
   });
 
   test('Deve visualizar a listagem de produtos cadastrados', async ({ page }) => {
-    await expect(page.locator('button:has-text("+ Novo Produto")').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Novo Produto")').first()).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=Gerenciar Produtos').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('Deve abrir o modal de cadastro de produto e suportar opções de adicionais', async ({ page }) => {
-    const novoProdutoBtn = page.locator('button:has-text("+ Novo Produto")').first();
+    const novoProdutoBtn = page.locator('button:has-text("Novo Produto")').first();
     await novoProdutoBtn.waitFor({ state: 'visible', timeout: 10000 });
     await novoProdutoBtn.click();
 

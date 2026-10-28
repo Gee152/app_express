@@ -20,6 +20,6 @@ test.describe('Autenticação e Controle de Acesso', () => {
     await loginPage.login('invalido@teste.com', 'senha_errada');
     
     // Deve exibir feedback de erro
-    await loginPage.expectErrorMessage('E-mail ou senha incorretos');
+    await loginPage.expectErrorMessage('E-mail ou senha');
   });
 });

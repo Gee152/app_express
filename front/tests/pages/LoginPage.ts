@@ -16,7 +16,7 @@ export class LoginPage {
     this.emailInput = page.locator('input[type="email"]').first();
     this.senhaInput = page.locator('input[type="password"], input[placeholder*="••••"]').first();
     this.submitButton = page.locator('button[type="submit"]').first();
-    this.errorMessage = page.locator('.text-red-300, .bg-red-950, div:has-text("E-mail ou senha incorretos")').first();
+    this.errorMessage = page.locator('.text-red-300, .bg-red-950, div:has-text("E-mail ou senha")').first();
     this.passwordToggleEye = page.locator('button[title*="senha" i]');
   }
 

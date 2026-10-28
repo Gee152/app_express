@@ -46,10 +46,18 @@ export default defineConfig({
       use: { ...devices['iPhone 13'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: true,
+      timeout: 120 * 1000,
+    },
+    {
+      command: 'npm --prefix ../backend run dev',
+      url: 'http://localhost:3333/api/health',
+      reuseExistingServer: true,
+      timeout: 120 * 1000,
+    },
+  ],
 });
